@@ -33,17 +33,21 @@ class Mnist:
 		# Download pickle, if necessary:
 		if not os.path.exists( mnist_pickle_path ):
 			# fix for python3 compatibility. credit: https://stackoverflow.com/a/3969809/5420567
-			import urllib.request
-			downloader = urllib.request.URLopener()
+			try:
+				import urllib.request as urlopener
+			except ImportError:
+				import urllib as urlopener
+			downloader = urlopener.URLopener()
 			downloader.retrieve( 'http://deeplearning.net/data/mnist/mnist.pkl.gz', mnist_pickle_path )
-
-		# fix for python3 compatibility. credit: http://www.mlblog.net/2016/09/reading-mnist-in-python3.html
 		# Load pickle:
-		with gzip.open(mnist_pickle_path, 'rb') as fh:
-			u = pickle._Unpickler(fh)
-			u.encoding = 'latin1'
-			training_data, validation_data, testing_data = u.load()
-
+		with gzip.open( mnist_pickle_path, 'rb' ) as fh:
+			# fix for python3 compatibility. 
+			# credit: http://www.mlblog.net/2016/09/reading-mnist-in-python3.html
+			# credit: http://blog.yannisassael.com/2016/03/open-python-2-pickle-python-3
+			try:
+				training_data, validation_data, testing_data = pickle.load( fh, encoding='latin1' )
+			except TypeError:
+				training_data, validation_data, testing_data = pickle.load( fh )
 		# Format dataset:
 		self.training_digits, self.training_labels = self.format_dataset( training_data, threshold )
 		self.validation_digits, self.validation_labels = self.format_dataset( validation_data, threshold )
