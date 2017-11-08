@@ -77,5 +77,5 @@ mlp.train( training_encodings, training_labels, validation_encodings, validation
 testing_guesses = mlp.predict( testing_encodings )
 testing_error = mlp.getErrorRate( testing_labels, testing_guesses )
 testing_accuracy = mnist_get_accuracy( testing_labels, testing_guesses )
-print 'Final Testing Error Rate: %f' % ( testing_error )
-print 'Final Testing Accuracy: %f' % ( testing_accuracy )
+print ('Final Testing Error Rate: %f' % ( testing_error ))
+print ('Final Testing Accuracy: %f' % ( testing_accuracy ))

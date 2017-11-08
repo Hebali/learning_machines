@@ -21,7 +21,7 @@ def mnist_encode_one_hot_label(idx):
 def mnist_decode_one_hot_label(enc):
 	'''MNIST one-hot decoder function'''
 	return np.argmax( enc )
-	
+
 def mnist_get_accuracy(labels, guesses):
 	'''returns percentage of MNIST guesses that match labels'''
 	return np.mean( np.equal( np.argmax( labels, axis = 1 ), np.argmax( guesses, axis = 1 ) ).astype( np.float64 ) )
@@ -32,13 +32,22 @@ class Mnist:
 		mnist_pickle_path = 'mnist.pkl.gz'
 		# Download pickle, if necessary:
 		if not os.path.exists( mnist_pickle_path ):
-			import urllib
-			downloader = urllib.URLopener()
-			downloader.retrieve( 'http://deeplearning.net/data/mnist/mnist.pkl.gz', mnist_pickle_path )				
+			# fix for python3 compatibility. credit: https://stackoverflow.com/a/3969809/5420567
+			try:
+				import urllib.request as urlopener
+			except ImportError:
+				import urllib as urlopener
+			downloader = urlopener.URLopener()
+			downloader.retrieve( 'http://deeplearning.net/data/mnist/mnist.pkl.gz', mnist_pickle_path )
 		# Load pickle:
-		fh = gzip.open( mnist_pickle_path, 'rb' )
-		training_data, validation_data, testing_data = pickle.load( fh )
-		fh.close()
+		with gzip.open( mnist_pickle_path, 'rb' ) as fh:
+			# fix for python3 compatibility. 
+			# credit: http://www.mlblog.net/2016/09/reading-mnist-in-python3.html
+			# credit: http://blog.yannisassael.com/2016/03/open-python-2-pickle-python-3
+			try:
+				training_data, validation_data, testing_data = pickle.load( fh, encoding='latin1' )
+			except TypeError:
+				training_data, validation_data, testing_data = pickle.load( fh )
 		# Format dataset:
 		self.training_digits, self.training_labels = self.format_dataset( training_data, threshold )
 		self.validation_digits, self.validation_labels = self.format_dataset( validation_data, threshold )
@@ -55,13 +64,13 @@ class Mnist:
 			return ( self.validation_digits, self.validation_labels )
 		else:
 			return self.get_batch( count, self.validation_digits, self.validation_labels )
-		
+
 	def getTestingData(self, count = 0):
 		if count == 0:
 			return ( self.testing_digits, self.testing_labels )
 		else:
 			return self.get_batch( count, self.testing_digits, self.testing_labels )
-		
+
 	@staticmethod
 	def get_batch(count,digits,labels):
 		total = len( digits )
